@@ -48,19 +48,34 @@ def process_file(uploaded_file, learning_objectives, lo_mapping, file_name, ques
 # Streamlit UI
 st.title("Learning Objective Matching Tool")
 
+st.write("Instructions")
+st.write("1. The Main AMT Sheet should be first in excel")
+st.write("2. The columns should have the exact name mentioned here :  Level,Skill,Topic,LO1,LO2,LO3,LO4,Question Type,Question Statement,Complexity Level,Difficulty Level Tag (Auto Populated- Do not Edit),Correct Answer (option keyin capital e.g. A ),Answer Explanation,Bloom's Taxonomy,optionKey1 ,optionKey2 ,optionKey3 ,optionKey4 ,optionValue1 ,optionValue2 ,optionValue3 ,optionValue4")
+st.write("3. Make sure there is no space in the column name")
+st.write("4. Select the LO Bank (Foundational or Preparatory)")
+st.write("5. Upload the AMT Excel")
+st.write("6. Write the file name as instructed Level_CourseNo_ModuleNo_SubUnitNo (E.g: FDT_7_2_10)")
+st.write("7. Select the row range or data range basically the row number from which your question starts and ends (for E.g: 3-38)")
+st.write("8. Let it process and check the processed data table appearing on the screen")
+st.write("9. Download the file")
+
+# Dropdown for LO selection
+lo_option = st.selectbox("Select LO Type", ["Foundational LO", "Preparatory LO"])
+
+# Set file name based on selection
+ttca_file = "TTCA_FDT_LO_Final.xlsx" if lo_option == "Foundational LO" else "TTCA_Prep_LO_Final.xlsx"
+template_file = "QTemplates.xlsx"
+
 # Upload AMT or question file
 uploaded_file = st.file_uploader("Upload the FDT_AMT Excel file", type=["xlsx"])
 
-# Upload TTCA_FDT_LO file
-ttca_file = "TTCA_FDT_LO_Final.xlsx"
-template_file = "QTemplates.xlsx"
-
-if uploaded_file and ttca_file:
+if uploaded_file:
     # Load TTCA_FDT_LO data
     xls_ttca = load_excel(ttca_file)
     sheet1 = pd.read_excel(xls_ttca, sheet_name="PRINFO")
     lo_code_sheet = pd.read_excel(xls_ttca, sheet_name="LOCODE")
     template_df = pd.read_excel(template_file)
+    
     # User Inputs
     file_name = st.text_input("Enter File Name (e.g., FDT_1_2_3)")
     question_range = st.text_input("Enter Question Range (e.g., 3-38)")
@@ -80,37 +95,39 @@ if uploaded_file and ttca_file:
         st.dataframe(processed_df)
         
         column_mapping = {
-                "Level": "level",
-                "Skill": "skill",
-                "Topic": "topic",
-                "LO1Code": "lo1",
-                "LO2Code": "lo2",
-                "LO3Code": "lo3",
-                "LO4Code": "lo4",
-                "Question Type": "questionType",
-                "Question Statement": "questionStatement",
-                "Complexity Level": "complexityLevel",
-                "Difficulty Level Tag (Auto Populated- Do not Edit)": "difficultyLevel",
-                "Correct Answer (option keyin capital e.g. A )": "correctAnswer",
-                "Answer Explanation": "answerExplanation",
-                "Bloom's Taxonomy": "bloomsTaxonomy",
-                "optionKey1":"optionKey1",
-                "optionKey2":"optionKey2",
-                "optionKey3":"optionKey3",
-                "optionKey4":"optionKey4",
-                "optionValue1":"optionValue1",
-                "optionValue2":"optionValue2",
-                "optionValue3":"optionValue3",
-                "optionValue4":"optionValue4"
-            }
+            "Level": "level",
+            "Skill": "skill",
+            "Topic": "topic",
+            "LO1Code": "lo1",
+            "LO2Code": "lo2",
+            "LO3Code": "lo3",
+            "LO4Code": "lo4",
+            "Question Type": "questionType",
+            "Question Statement": "questionStatement",
+            "Complexity Level": "complexityLevel",
+            "Difficulty Level Tag (Auto Populated- Do not Edit)": "difficultyLevel",
+            "Correct Answer (option keyin capital e.g. A )": "correctAnswer",
+            "Answer Explanation": "answerExplanation",
+            "Bloom's Taxonomy": "bloomsTaxonomy",
+            "optionKey1": "optionKey1",
+            "optionKey2": "optionKey2",
+            "optionKey3": "optionKey3",
+            "optionKey4": "optionKey4",
+            "optionValue1": "optionValue1",
+            "optionValue2": "optionValue2",
+            "optionValue3": "optionValue3",
+            "optionValue4": "optionValue4"
+        }
         
         # Insert processed data into the template with mapped column names
         for processed_col, template_col in column_mapping.items():
             if processed_col in processed_df.columns and template_col in template_df.columns:
                 template_df[template_col] = processed_df[processed_col]
         
+        # Fill remaining empty columns with "NA"
+        template_df.fillna("NA", inplace=True)
+        
         # Save and allow download of processed template file
         output_file = file_name + "_Processed.xlsx"
         template_df.to_excel(output_file, index=False)
         st.download_button("Download Updated Template File", data=open(output_file, "rb"), file_name=output_file)
-
