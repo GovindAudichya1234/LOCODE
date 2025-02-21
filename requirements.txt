@@ -2,4 +2,4 @@ streamlit
 fuzzywuzzy
 pandas
 numpy
-openxyl
+openpyxl
